@@ -5,5 +5,6 @@ function working (app, mongoose) {
     weather(app);
     favourites(app, mongoose);
 }
-
-module.exports.working = working;
+module.exports = {
+    working
+}

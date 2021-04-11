@@ -13,13 +13,13 @@ app.use(cors());
 mongoose.set("useCreateIndex", true);
 
 mongoose.connect(process.env.MONGODB_URL, {useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false})
-        .then((mongoose) => {
-            console.log("Connection to db success");
+.then((mongoose) => {
+    console.log("Connection to db success");
 
-            work(app, mongoose);
+    work(app, mongoose);
 
-            app.listen(port, () => {
-                console.log("Server is started...")
-            })
-        })
-        .catch(console.log);
+    app.listen(port, () => {
+        console.log("Server is started...")
+     })
+})
+.catch(console.log);

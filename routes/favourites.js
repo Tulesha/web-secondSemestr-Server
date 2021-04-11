@@ -1,66 +1,51 @@
-const Requests = require("../Requests/fetch");
+const requests = require("../Requests/fetch");
 const getFavoriteCityModel = require("../db/schema");
+const asyncHandler = require("express-async-handler");
 
 module.exports = function (app, mongoose) {
     const favouriteCity = getFavoriteCityModel(mongoose);
 
-    app.get("/favourites", async (req, res) => {
-        let cities = undefined;
-        let error = undefined;
+    app.get("/favourites", asyncHandler (async (req, res) => {
+        let cities = await favouriteCity.find().exec();
+
         let citiesArray = [];
-
-        await favouriteCity.find().then(value => cities = value).catch(e => error = e);
-
-        if (error) {
-            console.log(error);
-            res.status(500);
-            return;
-        }
 
         cities.forEach(info => citiesArray.push(info.cityName));
 
         res.send({favouriteCities: citiesArray})
-    });
+    }));
 
-    app.post("/favourites", async (req, res) => {
-        Requests.fetchCityByName(req.query.q)
-                .then(async data => {
-                    let city;
-                    let error;
+    app.post("/favourites",asyncHandler (async (req, res) => {
+        const {q} = req.query;
 
-                    await favouriteCity.find({cityName: data.name})
-                                       .then(value => city = value[0])
-                                       .catch(e => error = e);
-                    
-                    if (error) {
-                        console.log(error);
-                        res.status(500);
-                        return;
-                    }
+        let data = await requests.fetchCityByName(q);
 
-                    if (city !== undefined) {
-                        res.status(409).send("City already exists");
-                        return;
-                    }
-
-                    res.send(data);
-                    new favouriteCity({cityName: data.name}).save();
-                })
-                .catch(() => res.status(404).send("Not found"));
-    });
-
-    app.delete("/favourites", async (req, res) => {
-        let error;
-
-        await favouriteCity.findOneAndRemove({cityName: req.query.q})
-                           .catch(e => error = e);
-
-        if (error) {
-            console.log(error);
-            res.status(500).send();
+        if (data == null) {
+            res.status(404).send();
             return;
         }
 
-        res.send();
-    });
+        let exists = await favouriteCity.findOne({cityName: data.name}).exec();
+
+        if (exists !== null) {
+            res.status(409).send();
+            return;
+        }
+        
+        new favouriteCity({cityName: data.name}).save();
+        res.status(201).send(data);
+    }));
+
+    app.delete("/favourites",asyncHandler (async (req, res) => {
+        const {q} = req.query;
+
+        const remove = await favouriteCity.findOneAndRemove({cityName: q});
+        if (remove === null) {
+            res.status(404);
+            res.send();
+            return;
+        }
+
+        res.status(204).send();
+    }));
 };

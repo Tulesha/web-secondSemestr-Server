@@ -1,3 +1,4 @@
+const { model } = require("mongoose");
 const fetch = require("node-fetch");
 const conf = require("./config");
 
@@ -14,7 +15,6 @@ async function fetchCity(params) {
     if (data.status === 200) {
         return await data.json();
     }
-    throw new Error(`Request is bad. Status ${data.status}`);
 }
 
 async function fetchCityByName(cityName) {
@@ -25,5 +25,6 @@ async function fetchCityByLocation(lat, lon) {
     return fetchCity({lat: lat, lon:lon});
 }
 
-module.exports.fetchCityByName = fetchCityByName;
-module.exports.fetchCityByLocation = fetchCityByLocation;
+module.exports = {
+    fetchCityByName, fetchCityByLocation
+}
