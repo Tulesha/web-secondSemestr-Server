@@ -13,17 +13,21 @@ app.use(cors());
 
 mongoose.set("useCreateIndex", true);
 
-mongoose.connect(process.env.MONGODB_URL, {useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false})
-.then((mongoose) => {
-    console.log("Connection to db success");
+async function start () {
+    try {
+        let db = await mongoose.connect(process.env.MONGODB_URL, {useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false})
 
-    app.listen(port, () => {
-        console.log("Server is started...");
-    })
+        app.listen(port, () => {
+            console.log("Server is started...");
+        })
+        app.use("/weather", weather);
     
-    app.use("/weather", weather);
-    
-    favourites.initSchema(mongoose);
-    app.use("/favourites", favourites.router);
-})
-.catch(console.log);
+        favourites.initSchema(db);
+        app.use("/favourites", favourites.router);
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
+
+start();
