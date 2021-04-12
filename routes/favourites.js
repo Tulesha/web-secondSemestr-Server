@@ -1,51 +1,59 @@
 const requests = require("../Requests/fetch");
-const getFavoriteCityModel = require("../db/schema");
 const asyncHandler = require("express-async-handler");
+const getFavoriteCityModel = require("../db/schema");
+var express = require('express');
+var router = express.Router();
 
-module.exports = function (app, mongoose) {
-    const favouriteCity = getFavoriteCityModel(mongoose);
+let favouriteCity;
 
-    app.get("/favourites", asyncHandler (async (req, res) => {
-        let cities = await favouriteCity.find().exec();
+function initSchema (mongoose) {
+    favouriteCity = getFavoriteCityModel(mongoose);
+}
 
-        let citiesArray = [];
+router.get("/", asyncHandler (async (req, res) => {
+    let cities = await favouriteCity.find().exec();
 
-        cities.forEach(info => citiesArray.push(info.cityName));
+    let citiesArray = [];
 
-        res.send({favouriteCities: citiesArray})
-    }));
+    cities.forEach(info => citiesArray.push(info.cityName));
 
-    app.post("/favourites",asyncHandler (async (req, res) => {
-        const {q} = req.query;
+    res.send({favouriteCities: citiesArray})
+}));
 
-        let data = await requests.fetchCityByName(q);
+router.post("/",asyncHandler (async (req, res) => {
+    const {q} = req.query;
 
-        if (data == null) {
-            res.status(404).send();
-            return;
-        }
+    let data = await requests.fetchCityByName(q);
 
-        let exists = await favouriteCity.findOne({cityName: data.name}).exec();
+    if (data == null) {
+        res.status(404).send();
+        return;
+    }
 
-        if (exists !== null) {
-            res.status(409).send();
-            return;
-        }
-        
-        new favouriteCity({cityName: data.name}).save();
-        res.status(201).send(data);
-    }));
+    let exists = await favouriteCity.findOne({cityName: data.name}).exec();
 
-    app.delete("/favourites",asyncHandler (async (req, res) => {
-        const {q} = req.query;
+    if (exists !== null) {
+        res.status(409).send();
+        return;
+    }
+    
+    new favouriteCity({cityName: data.name}).save();
+    res.status(201).send(data);
+}));
 
-        const remove = await favouriteCity.findOneAndRemove({cityName: q});
-        if (remove === null) {
-            res.status(404);
-            res.send();
-            return;
-        }
+router.delete("/",asyncHandler (async (req, res) => {
+    const {q} = req.query;
 
-        res.status(204).send();
-    }));
-};
+    const remove = await favouriteCity.findOneAndRemove({cityName: q});
+    if (remove === null) {
+        res.status(404);
+        res.send();
+        return;
+    }
+
+    res.status(204).send();
+}));
+
+module.exports = {
+    router, initSchema
+}

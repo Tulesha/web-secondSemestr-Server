@@ -2,11 +2,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const conf = require("./config");
-const routes = require("./routes/working");
+const weather = require("./routes/weather")
+const favourites = require("./routes/favourites");
+
 
 const app = express();
 const port = conf.port;
-const work = routes.working;
 
 app.use(cors());
 
@@ -16,10 +17,13 @@ mongoose.connect(process.env.MONGODB_URL, {useUnifiedTopology: true, useNewUrlPa
 .then((mongoose) => {
     console.log("Connection to db success");
 
-    work(app, mongoose);
-
     app.listen(port, () => {
-        console.log("Server is started...")
-     })
+        console.log("Server is started...");
+    })
+    
+    app.use("/weather", weather);
+    
+    favourites.initSchema(mongoose);
+    app.use("/favourites", favourites.router);
 })
 .catch(console.log);
