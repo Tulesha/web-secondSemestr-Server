@@ -20,10 +20,10 @@ async function start () {
         app.listen(port, () => {
             console.log("Server is started...");
         })
-        app.use("/weather", weather);
+        app.use("/api/weather", weather);
     
         favourites.initSchema(db);
-        app.use("/favourites", favourites.router);
+        app.use("/api/favourites", favourites.router);
     }
     catch (err) {
         console.log(err);
